@@ -1,0 +1,135 @@
+
+## 📌 Pizza Hut Sales Analysis — SQL Queries & Concepts Reference
+
+### 1. Total Orders Count
+
+* **SQL Query:**
+```sql
+SELECT COUNT(*) AS Total_orders FROM orders;
+
+```
+
+
+* **Concept:** Ye query `orders` table ke total rows count karti hai, jisse saal 2015 ke total **21,350 orders** ki count milti hai.
+
+
+
+---
+
+### 2. Total Gross Revenue Calculation
+
+* **SQL Query:**
+```sql
+SELECT ROUND(SUM(order_details.quantity * pizzas.price), 2) AS total_revenue
+FROM order_details
+JOIN pizzas ON order_details.pizza_id = pizzas.pizza_id;
+
+```
+
+
+* **Concept:** `order_details` aur `pizzas` tables ko join karke har order item ki quantity ko price se multiply karke total gross revenue (**$817,860.05**) calculate karti hai.
+
+
+
+---
+
+### 3. Highest-Priced Pizza Identification
+
+* **SQL Query:**
+```sql
+SELECT pt.name, p.price
+FROM pizzas p
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
+ORDER BY p.price DESC 
+LIMIT 1;
+
+```
+
+
+* **Concept:** Prices ko descending order mein sort karke `LIMIT 1` se menu ki sabse mehengi pizza (**The Brie Carre Pizza - $23.65**) retrive karti hai.
+
+
+
+---
+
+### 4. Most Common Pizza Size Ordered
+
+* **SQL Query:**
+```sql
+SELECT p.size, SUM(od.quantity) AS total_orders
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+GROUP BY p.size
+ORDER BY total_orders DESC 
+LIMIT 1;
+
+```
+
+
+* **Concept:** Pizza sizes (`S`, `M`, `L`, etc.) ke hisaab se quantities ko group karke sabse popular size (**Large / L size**, ~46% revenue contribution) batati hai.
+
+
+
+---
+
+### 5. Top 5 Most Ordered Pizza Types
+
+* **SQL Query:**
+```sql
+SELECT pt.name, SUM(od.quantity) AS total_quantity
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
+GROUP BY pt.name
+ORDER BY total_quantity DESC 
+LIMIT 5;
+
+```
+
+
+* **Concept:** Total order volume ke aadhar par top 5 sabse zyada bikne wali pizzas ki list banati hai.
+
+
+
+---
+
+### 6. Category-Wise Distribution & Percentages
+
+* **SQL Query:**
+```sql
+SELECT pt.category, 
+       SUM(od.quantity) AS total_quantity,
+       ROUND(SUM(od.quantity) * 100.0 / (SELECT SUM(quantity) FROM order_details), 2) AS percentage
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
+GROUP BY pt.category;
+
+```
+
+
+* **Concept:** Subquery ki help se har category (Classic, Supreme, Veggie, Chicken) ka total volume aur sales percentage share calculate karti hai.
+
+
+
+---
+
+### 7. Daily Average Pizzas Sold (Nested Query)
+
+* **SQL Query:**
+```sql
+SELECT ROUND(AVG(pizzas_per_day), 0) AS avg_pizzas_per_day
+FROM (
+    SELECT o.date, SUM(od.quantity) AS pizzas_per_day
+    FROM orders o
+    JOIN order_details od ON o.order_id = od.order_id
+    GROUP BY o.date
+) AS daily_totals;
+
+```
+
+
+* **Concept:** Subquery pehle har date ki daily sales calculate karti hai, aur outer query unka daily average (**~137 pizzas per day**) nikalati hai.
+
+
+
